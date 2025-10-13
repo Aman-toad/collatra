@@ -1,14 +1,20 @@
-export default function Input({ label, type, value, onChange }) {
+export const Input = ({ label, className, ...props }) => {
+  
+  // Define the base styles as a constant string
+  const baseStyles = 'w-full px-4 py-3 rounded-full bg-input border-2 border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:scale-[1.01] transition-all';
+  const finalClassNames = `${baseStyles} ${className || ''}`;
+
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+    <div className="w-full">
+      {label && (
+        <label className="block text-sm font-medium mb-2 text-foreground">
+          {label}
+        </label>
+      )}
       <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        className="border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
+        className={finalClassNames}
+        {...props}
       />
     </div>
   );
-}
+};
