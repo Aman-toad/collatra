@@ -4,7 +4,8 @@ import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import connectDB from './config/db.js'
-import authRoutes from './routes/auth.js'
+import authRoutes from './routes/authRoutes.js'
+import workspaceRoutes from './routes/workspaceRoutes.js'
 
 dotenv.config();
 connectDB();
@@ -27,6 +28,7 @@ io.on("connection", (socket) => {
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.unsubscribe("/api/workspace", workspaceRoutes)
 app.get("/", (req, res) => res.send("CollabBoard API Running"));
 
 const PORT = process.env.PORT || 5000;
