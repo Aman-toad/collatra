@@ -6,7 +6,7 @@ const cardSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    discription: {
+    description: {
       type: String,
       default: ""
     },
@@ -20,9 +20,9 @@ const cardSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
-    workplace: {
+    workspace: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Workplace",
+      ref: "Workspace",
       required: true,
     },
   },
