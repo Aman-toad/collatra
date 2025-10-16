@@ -1,146 +1,201 @@
-import { motion } from 'framer-motion';
-import { useContext, useState } from 'react';
-import { Plus, Users, Calendar } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useContext, useEffect, useState } from 'react';
+import { Plus, Menu } from 'lucide-react';
 import { Button } from '../components/Button';
-import { ThemeToggle } from '../components/ThemeToggle';
-import { Link, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.png';
+import { Input } from '../components/Input';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { Sidebar } from '../components/Sidebar';
+import WorkspaceCard from '../components/WorkspaceCard';
+import api from '../utils/api';
 
 export default function Workspaces() {
-  //auth protection
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate(); 
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [workspaces, setWorkspaces] = useState([]);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    fetchWorkspaces();
+  }, [user, navigate]);
 
-  const [workspaces] = useState([
-    {
-      id: 1,
-      name: 'Hackathon Team',
-      description: 'Build the next big thing',
-      members: 5,
-      color: 'bg-primary',
-      createdAt: '2025-01-15',
-    },
-    {
-      id: 2,
-      name: 'Startup Project',
-      description: 'MVP development and planning',
-      members: 3,
-      color: 'bg-accent',
-      createdAt: '2025-01-10',
-    },
-  ]);
+  const fetchWorkspaces = async () => {
+    try {
+      const { data } = await api.get('/workspaces');
+      setWorkspaces(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const createWorkspace = async () => {
+    if (!title.trim()) return;
+    try {
+      await api.post('/workspaces', { title, description });
+      setTitle('');
+      setDescription('');
+      setShowCreateModal(false);
+      fetchWorkspaces();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <motion.header
-        className="border-b border-border bg-card"
-        initial={{ y: -50 }}
-        animate={{ y: 0 }}
+    <div className="min-h-screen bg-background flex">
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+
+      <motion.div
+        animate={{ marginLeft: sidebarOpen ? 280 : 80 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="flex-1 min-h-screen"
       >
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="CollabSutra" className="w-10 h-10" />
-            <span className="text-2xl font-bold text-foreground">CollabSutra</span>
-          </Link>
-
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-          </div>
-        </div>
-      </motion.header>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-6 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-primary text-primary-foreground rounded-lg shadow-lg"
         >
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-foreground mb-2">Your Workspaces</h1>
-              <p className="text-muted-foreground">Organize your projects and collaborate with your team</p>
-            </div>
+          <Menu className="w-6 h-6" />
+        </button>
 
-            <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-              <div className="bg-white p-8 rounded-lg shadow-md w-96">
-                <h1 className="text-2xl font-bold mb-4 text-center">
-                  Welcome, {user.name}! 🎉
-                </h1>
-                <p className="text-center text-gray-600 mb-4">{user.email}</p>
-                <button
-                  onClick={logout}
-                  className="w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600 transition"
+        <div className="container mx-auto px-6 py-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-4">
+              <div>
+                <motion.h1
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-4xl md:text-5xl font-bold text-foreground mb-2"
                 >
-                  Logout
-                </button>
+                  Your Workspaces
+                </motion.h1>
+                <motion.p
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-muted-foreground text-lg"
+                >
+                  Organize your projects and collaborate with your team
+                </motion.p>
               </div>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-2 shadow-lg"
+                >
+                  <Plus className="w-5 h-5" />
+                  Create Workspace
+                </Button>
+              </motion.div>
             </div>
 
-            <Button className="flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              Create Workspace
-            </Button>
-          </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <AnimatePresence mode="popLayout">
+                {workspaces.map((workspace, index) => (
+                  <WorkspaceCard key={workspace._id} workspace={workspace} index={index} />
+                ))}
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {workspaces.map((workspace, index) => (
-              <motion.div
-                key={workspace.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-              >
-                <Link to={`/workspaces/${workspace.id}`}>
-                  <div className="bg-card border-2 border-border rounded-3xl p-6 hover:border-primary transition-all cursor-pointer">
-                    <div className={`w-16 h-16 ${workspace.color} rounded-2xl mb-4 flex items-center justify-center text-white text-2xl font-bold`}>
-                      {workspace.name.charAt(0)}
-                    </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: workspaces.length * 0.1 }}
+                  whileHover={{ y: -8, scale: 1.02 }}
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-muted border-2 border-dashed border-border rounded-3xl p-6 h-full flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-all min-h-[250px]"
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    transition={{ type: 'spring', stiffness: 300 }}
+                    className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4"
+                  >
+                    <Plus className="w-8 h-8 text-primary" />
+                  </motion.div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">Create New Workspace</h3>
+                  <p className="text-muted-foreground text-center">Start collaborating on a new project</p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
 
-                    <h3 className="text-xl font-bold text-foreground mb-2">{workspace.name}</h3>
-                    <p className="text-muted-foreground mb-4">{workspace.description}</p>
-
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        <span>{workspace.members} members</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date(workspace.createdAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-
-            {/* Create New Card */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowCreateModal(false)}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          >
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: workspaces.length * 0.1 }}
-              whileHover={{ y: -5 }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card rounded-3xl p-8 max-w-md w-full shadow-2xl border-2 border-border"
             >
-              <div className="bg-muted border-2 border-dashed border-border rounded-3xl p-6 h-full flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-all min-h-[250px]">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                  <Plus className="w-8 h-8 text-primary" />
+              <h2 className="text-2xl font-bold text-foreground mb-6">Create New Workspace</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Workspace Name
+                  </label>
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g., Marketing Campaign 2024"
+                    className="w-full"
+                  />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">Create New Workspace</h3>
-                <p className="text-muted-foreground text-center">Start collaborating on a new project</p>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Description (Optional)
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="What's this workspace about?"
+                    className="w-full px-4 py-3 rounded-2xl border-2 border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-all resize-none"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 bg-muted text-foreground hover:bg-muted/80"
+                >
+                  Cancel
+                </Button>
+                <Button onClick={createWorkspace} className="flex-1">
+                  Create
+                </Button>
               </div>
             </motion.div>
-          </div>
-        </motion.div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-};
+}

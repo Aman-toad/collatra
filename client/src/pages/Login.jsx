@@ -30,6 +30,7 @@ const Login = () => {
       const { data } = await api.post("/auth/login", formData);
       setUser(data);
       toast.success('Login Successfull')
+      localStorage.setItem("user", JSON.stringify(data.user))
       localStorage.setItem("token", data.token)
       navigate("/workspaces");
     } catch (err) {

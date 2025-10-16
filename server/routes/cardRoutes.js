@@ -12,8 +12,11 @@ router.post("/", authMiddleware, async (req, res) => {
     const workspace = await Workspace.findById(workspaceId);
     if (!workspace) return res.status(404).json({ message: "workspace not found" });
 
-    // Only members can add cards
-    if (!workspace.members.includes(req.user._id)) {
+    // Only members or owner can add cards
+    if (
+      !workspace.members.includes(req.user._id) &&
+      workspace.owner.toString() !== req.user.id
+    ) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -23,6 +26,7 @@ router.post("/", authMiddleware, async (req, res) => {
       status,
       assignedTo,
       workspace: workspaceId,
+      owner:req.user.id,
     });
 
     await card.save();
@@ -44,30 +48,30 @@ router.put("/:id", authMiddleware, async (req, res) => {
     const { title, description, status, assignedTo } = req.body;
     const card = await Card.findById(req.params.id);
     if (!card) return res.status(404).json({ message: "Card not " });
-  
+
     const workspace = await Workspace.findById(card.workspace);
     if (!workspace.members.includes(req.user._id)) {
       return res.status(403).json({ message: "Access denied" });
     }
-  
+
     card.title = title ?? card.title;
     card.description = description ?? card.description;
     card.status = status ?? card.status;
     card.assignedTo = assignedTo ?? card.assignedTo;
-  
+
     await card.save();
     res.status(200).json(card)
   } catch (error) {
-    console.error("Error updating card: ",err);;
-    res.status(500).json({message: "Failed to update card"});    
+    console.error("Error updating card: ", err);;
+    res.status(500).json({ message: "Failed to update card" });
   }
 });
 
 //delete card
-router.delete("/:id", authMiddleware, async (req,res)=>{
+router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const card = await Card.findById(req.params.id);
-    if(!card) return res.status(404).json({message: "Card not found"});
+    if (!card) return res.status(404).json({ message: "Card not found" });
 
     const workspace = await Workspace.findById(card.workspace)
 

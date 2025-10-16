@@ -1,16 +1,12 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Workspaces from "./pages/Workspace";
 import NotFound from "./pages/NotFound";
-import { useContext } from "react";
-import { AuthContext } from "./context/AuthContext";
+import WorkspaceView from "./pages/WorkspaceView";
+import PrivateRoute from "./routes/PrivateRoute";
 
-function PrivateRouter({ children }) {
-  const { user } = useContext(AuthContext);
-  return user ? children : <Navigate to='/login' />;
-}
 
 export default function App() {
   return (
@@ -21,11 +17,13 @@ export default function App() {
 
       <Route path="/workspaces"
         element={
-          <PrivateRouter>
+          <PrivateRoute>
             <Workspaces />
-          </PrivateRouter>
+          </PrivateRoute>
         }
       />
+
+      <Route path="/workspaces/:id" element={<WorkspaceView />} />
 
       {/* for fallback */}
       <Route path="*" element={<NotFound />} />

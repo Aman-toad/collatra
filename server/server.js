@@ -28,9 +28,12 @@ io.on("connection", (socket) => {
 
 app.use(cors());
 app.use(express.json());
+
+//mounting routes with /api
 app.use("/api/auth", authRoutes);
 app.use("/api/cards", cardRoutes)
-app.unsubscribe("/api/workspace", workspaceRoutes)
+app.use("/api/workspaces", workspaceRoutes)
+
 app.get("/", (req, res) => res.send("CollabBoard API Running"));
 
 const PORT = process.env.PORT || 5000;

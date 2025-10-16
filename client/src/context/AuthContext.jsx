@@ -1,24 +1,44 @@
-import { createContext, useState, useEffect, Children } from "react";
+import { createContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() =>
-    JSON.parse(localStorage.getItem("user")) || null
-  );
+  const getStoredUser = () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser || storedUser === "undefined") return null;
+      return JSON.parse(storedUser);
+    } catch (err) {
+      console.error("Error parsing stored user:", err);
+      return null;
+    }
+  };
+
+  const [user, setUser] = useState(getStoredUser);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('user', JSON.stringify(user));
-  }, [user]);
+    const storedToken = localStorage.getItem("token");
+    const storedUser = getStoredUser();
+
+    if (storedToken && storedUser) {
+      setUser(storedUser);
+    } else {
+      setUser(null);
+    }
+
+    setIsLoading(false);
+  }, []);
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
-  }
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+  };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, logout }}>
+    <AuthContext.Provider value={{ user, setUser, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
-  )
-}
+  );
+};
