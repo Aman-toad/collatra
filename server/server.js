@@ -6,7 +6,7 @@ import { Server } from "socket.io";
 import connectDB from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
 import workspaceRoutes from './routes/workspaceRoutes.js';
-import cardRoutes from './routes/cardRoutes.js'
+import cardRoutes from './routes/cardRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -31,8 +31,9 @@ app.use(express.json());
 
 //mounting routes with /api
 app.use("/api/auth", authRoutes);
-app.use("/api/cards", cardRoutes)
-app.use("/api/workspaces", workspaceRoutes)
+app.use("/api/workspaces", workspaceRoutes);
+app.use("/api/cards", cardRoutes);
+
 
 app.get("/", (req, res) => res.send("CollabBoard API Running"));
 

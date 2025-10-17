@@ -4,7 +4,7 @@ import { Users, Calendar, FolderKanban } from 'lucide-react';
 
 export default function WorkspaceCard({ workspace, index }) {
   return (
-    <Link to={`/workspace/${workspace._id}`}>
+    <Link to={`/workspaces/${workspace._id}`}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -7,6 +7,7 @@ import CardItem from '../components/CardItem';
 import { Sidebar } from '../components/Sidebar';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { ToastContainer, toast } from 'react-toastify';
 
 export default function WorkspaceView() {
   const { id } = useParams();
@@ -28,6 +29,7 @@ export default function WorkspaceView() {
       const { data } = await api.get(`/workspaces/${id}`);
       setWorkspace(data);
     } catch (err) {
+      toast.error("Couldn't fetch the Workspace Card")
       console.error(err);
     }
   };
@@ -44,12 +46,15 @@ export default function WorkspaceView() {
   const createCard = async () => {
     if (!title.trim()) return;
     try {
-      await api.post('/cards', { title, description, workspace: id });
+      await api.post('/cards', { title, description, workspace: id , status:"todo"});
+
+      toast.success("Card Created SUccessfully !");
       setTitle('');
       setDescription('');
       setShowAddCard(false);
       fetchCards();
     } catch (err) {
+      toast.error("Couldn't create the card, Try again Later !")
       console.error(err);
     }
   };
@@ -168,6 +173,7 @@ export default function WorkspaceView() {
             className="mb-6"
           >
             <Button
+              variant='outline'
               onClick={() => setShowAddCard(!showAddCard)}
               className="flex items-center gap-2"
             >
@@ -201,11 +207,12 @@ export default function WorkspaceView() {
                     rows={3}
                   />
                   <div className="flex gap-3">
-                    <Button onClick={createCard} className="flex-1">
+                    <Button variant="outline" onClick={createCard} className="flex-1">
                       Create Card
                     </Button>
                     <Button
                       onClick={() => setShowAddCard(false)}
+                      variant='outline'
                       className="flex-1 bg-muted text-foreground hover:bg-muted/80"
                     >
                       Cancel
@@ -252,6 +259,7 @@ export default function WorkspaceView() {
           </div>
         </div>
       </motion.div>
+      <ToastContainer closeOnClick position="bottom-right" autoClose={3000} />
     </div>
   );
 }

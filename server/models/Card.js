@@ -12,7 +12,7 @@ const cardSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['todo', 'in-progress', 'done'],
+      enum: ['todo', 'doing', 'done'],
       default: 'todo'
     },
     assignedTo: {
