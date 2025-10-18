@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Trash2, ArrowLeft, ArrowRight, User } from 'lucide-react';
 import { useState } from 'react';
 
-export default function CardItem({ card, onMove, onDelete, onAssign, members }) {
+export default function CardItem({ card, onMove, onDelete, onAssign, members, onOpenDetails }) {
   const [showActions, setShowActions] = useState(false);
 
   const getStatusColor = (status) => {
@@ -27,14 +27,19 @@ export default function CardItem({ card, onMove, onDelete, onAssign, members }) 
       whileHover={{ scale: 1.02, y: -2 }}
       onHoverStart={() => setShowActions(true)}
       onHoverEnd={() => setShowActions(false)}
+      onClick={onOpenDetails}
       className={`rounded-2xl p-4 mb-3 shadow-md border-2 transition-all ${getStatusColor(card.status)}`}
     >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-bold text-foreground text-base">{card.title}</h3>
+        {/* delete btn */}
         <motion.button
           whileHover={{ scale: 1.1, rotate: 10 }}
           whileTap={{ scale: 0.9 }}
-          onClick={() => onDelete(card._id)}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevents modal from opening when clicking button
+            onDelete(card._id)
+          }}
           className="text-red-500 hover:text-red-700 transition-colors"
         >
           <Trash2 className="w-4 h-4" />
@@ -71,7 +76,10 @@ export default function CardItem({ card, onMove, onDelete, onAssign, members }) 
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => onMove(card._id, 'todo')}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMove(card._id, 'todo')
+              }}
               className="p-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
               title="Move to Todo"
             >
@@ -82,7 +90,10 @@ export default function CardItem({ card, onMove, onDelete, onAssign, members }) 
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => onMove(card._id, card.status === 'todo' ? 'doing' : 'done')}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMove(card._id, card.status === 'todo' ? 'doing' : 'done')
+              }}
               className="p-1.5 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
               title={card.status === 'todo' ? 'Move to Doing' : 'Move to Done'}
             >
@@ -93,7 +104,10 @@ export default function CardItem({ card, onMove, onDelete, onAssign, members }) 
 
         {/* Assign Dropdown */}
         <select
-          onChange={(e) => onAssign(card._id, e.target.value)}
+          onChange={(e) => {
+            e.stopPropagation();
+            onAssign(card._id, e.target.value)
+          }}
           className="text-xs px-2 py-1 rounded-lg border border-border bg-background text-foreground focus:ring-2 focus:ring-primary outline-none"
           defaultValue={card.assignedTo?.[0]?._id || ''}
         >

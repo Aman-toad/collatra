@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, Users, Menu, UserPlus } from 'lucide-react';
+import { ArrowLeft, Plus, User,Users, Menu, UserPlus, X, Crown, Edit, FileText } from 'lucide-react';
 import api from '../utils/api';
 import CardItem from '../components/CardItem';
 import { Sidebar } from '../components/Sidebar';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { ToastContainer, toast } from 'react-toastify';
+import socket from '../utils/socket';
+import { Textarea } from '../components/Textarea';
+import  CardComments  from '../components/CardComment.jsx';
 
 export default function WorkspaceView() {
   const { id } = useParams();
@@ -20,11 +23,36 @@ export default function WorkspaceView() {
   const [showAddCard, setShowAddCard] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberEmail, setMemberEmail] = useState('');
+  const [showManageMembers, setShowManageMembers] = useState(false);
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [tempDescription, setTempDescription] = useState('');
+  const selectedCard = cards.find(c => c._id === selectedCardId);
+  const selectedMember = selectedCard?.assignedTo?.[0]; // Assuming assignedTo is an array
 
   useEffect(() => {
     fetchWorkspace();
     fetchCards();
   }, [id]);
+
+  //socket.io 
+  useEffect(() => {
+    socket.emit("joinWorkspace", id);
+
+    socket.on("cardUpdated", (data) => {
+      setCards((prev) => {
+        // replace or update changed card
+        const updated = prev.map(c =>
+          c._id === data.card._id ? data.card : c
+        );
+        return updated;
+      });
+    });
+
+    return () => {
+      socket.off("cardUpdated");
+    };
+  }, [id])
 
   const fetchWorkspace = async () => {
     try {
@@ -123,6 +151,50 @@ export default function WorkspaceView() {
     }
   };
 
+  const removeMember = async (memberId) => {
+    if (!window.confirm("Are you sure you want to remove this member?")) return;
+
+    try {
+      const { data } = await api.delete(`/workspaces/${id}/members/${memberId}`);
+
+      toast.success(data.message);
+
+      await fetchWorkspace();
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || "Failed to remove member.";
+      toast.error(errorMessage);
+      console.error(err);
+    }
+  };
+
+  // update card description function
+  const updateCardDescription = async () => {
+    if (!selectedCard) return;
+
+    try {
+      const { data } = await api.put(`/cards/${selectedCardId}`, {
+        description: tempDescription
+      });
+
+      // Update the local state
+      setCards(prevCards => prevCards.map(card =>
+        card._id === selectedCardId ? { ...card, description: tempDescription } : card
+      ));
+
+      setIsEditingDescription(false);
+      toast.success('Card description updated.');
+
+    } catch (err) {
+      toast.error('Failed to update description.');
+      console.error(err);
+    }
+  };
+
+  const allMembers = [
+    ...(workspace?.owner ? [{ ...workspace.owner, isOwner: true }] : []),
+    ...(workspace?.members || []),
+  ]
+
   const columns = [
     { id: 'todo', title: 'To Do', color: 'border-blue-400 bg-blue-50/50 dark:bg-blue-950/10' },
     { id: 'doing', title: 'In Progress', color: 'border-yellow-400 bg-yellow-50/50 dark:bg-yellow-950/10' },
@@ -182,6 +254,10 @@ export default function WorkspaceView() {
                       Add Member
                     </Button>
                   </motion.button>
+                  <Button onClick={() => setShowManageMembers(true)} className="flex items-center gap-2">
+                    <UserPlus className="w-5 h-5" />
+                    Manage Members
+                  </Button>
                 </div>
 
                 {/* Members List */}
@@ -224,6 +300,82 @@ export default function WorkspaceView() {
               Add New Card
             </Button>
           </motion.div>
+
+          {/* manage members modal */}
+          <AnimatePresence>
+            {showManageMembers && (
+              <motion.div
+                // ... modal styling ...
+                onClick={() => setShowManageMembers(false)}
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
+              >
+                <motion.div
+                  // ... modal content styling ...
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-card p-8 rounded-3xl shadow-2xl w-full max-w-md border border-border"
+                >
+                  <h3 className="text-2xl font-bold mb-6 text-foreground">Manage Members ({allMembers.length})</h3>
+
+                  {/* NEW MEMBER INPUT */}
+                  {/* Reuse the 'addMember' function (you would need to copy it from the previous response and include it here) */}
+                  <div className='flex mb-6 gap-2'>
+                    <Input
+                      type="email"
+                      value={memberEmail}
+                      onChange={(e) => setMemberEmail(e.target.value)}
+                      placeholder="Enter member's email to add"
+                      className="flex-grow"
+                    />
+                    <Button onClick={addMember} disabled={!memberEmail.trim()} className="px-4">
+                      <UserPlus className='w-4 h-4' />
+                    </Button>
+                  </div>
+
+                  {/* MEMBERS LIST */}
+                  <div className='max-h-60 overflow-y-auto space-y-3 pr-2'>
+                    {allMembers.map(member => (
+                      <div key={member._id} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                        <div className='flex items-center gap-2'>
+                          <span className='w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm'>
+                            {member.name ? member.name[0].toUpperCase() : 'U'}
+                          </span>
+                          <div>
+                            <p className='font-medium text-foreground'>{member.name}</p>
+                            <p className='text-xs text-muted-foreground'>{member.email}</p>
+                          </div>
+                        </div>
+
+                        <div className='flex items-center gap-2'>
+                          {member.isOwner ? (
+                            <Crown className='w-4 h-4 text-yellow-500' title="Workspace Owner" />
+                          ) : (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => removeMember(member._id)}
+                              className='text-red-500 hover:bg-red-500/10'
+                              title="Remove Member"
+                            >
+                              <X className='w-4 h-4' />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-3 mt-6">
+                    <Button
+                      onClick={() => setShowManageMembers(false)}
+                      className="w-full bg-muted text-foreground hover:bg-muted/80"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Add Card Form */}
           <AnimatePresence>
@@ -337,12 +489,100 @@ export default function WorkspaceView() {
                         onDelete={deleteCard}
                         onAssign={assignCard}
                         members={workspace?.members || []}
+                        onOpenDetails={() => {
+                          setSelectedCardId(card._id);
+                          setTempDescription(card.description || '');
+                        }}
                       />
                     ))}
                 </AnimatePresence>
               </motion.div>
             ))}
           </div>
+
+          {/* card detail modal hosts comment */}
+          <AnimatePresence>
+            {selectedCard && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedCardId(null)} // Close on backdrop click
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
+              >
+                <motion.div
+                  initial={{ scale: 0.9, y: 50 }}
+                  animate={{ scale: 1, y: 0 }}
+                  exit={{ scale: 0.9, y: 50 }}
+                  onClick={(e) => e.stopPropagation()} // Prevent modal from closing
+                  className="bg-card p-8 rounded-3xl shadow-2xl w-full max-w-3xl h-5/6 overflow-y-auto border border-border relative"
+                >
+                  <button
+                    onClick={() => setSelectedCardId(null)}
+                    className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted"
+                    title="Close"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+
+                  <div className='flex flex-col h-full'>
+                    <h2 className="text-3xl font-bold mb-4 text-foreground break-words">{selectedCard.title}</h2>
+
+                    {/* Card Metadata */}
+                    <div className='flex items-center gap-6 mb-6 text-sm text-muted-foreground'>
+                      <div className='flex items-center gap-1.5'>
+                        <User className='w-4 h-4' />
+                        <span>Assigned: {selectedMember?.name || 'Unassigned'}</span>
+                      </div>
+                      <div className='capitalize'>
+                        Status: <span className={`font-semibold ${selectedCard.status === 'done' ? 'text-green-500' : 'text-primary'}`}>{selectedCard.status}</span>
+                      </div>
+                    </div>
+
+                    {/* Description Section */}
+                    <div className='mb-6'>
+                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                        <FileText className='w-5 h-5' /> Description
+                      </h3>
+                      {!isEditingDescription ? (
+                        <div
+                          className='bg-muted/50 p-4 rounded-xl whitespace-pre-wrap text-sm text-foreground hover:bg-muted transition-colors cursor-pointer'
+                          onClick={() => {
+                            setIsEditingDescription(true);
+                            setTempDescription(selectedCard.description || ''); // Initialize with current data
+                          }}
+                        >
+                          {selectedCard.description || <span className='text-muted-foreground italic'>Click to add a description...</span>}
+                        </div>
+                      ) : (
+                        <div className='space-y-3'>
+                          <Textarea
+                            value={tempDescription}
+                            onChange={(e) => setTempDescription(e.target.value)}
+                            placeholder="Enter detailed card description..."
+                            rows={4}
+                          />
+                          <div className='flex gap-2 justify-end'>
+                            <Button variant="ghost" onClick={() => setIsEditingDescription(false)}>Cancel</Button>
+                            <Button onClick={updateCardDescription} disabled={tempDescription === (selectedCard.description || '')}>
+                              Save
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+
+                    {/*  comment section */}
+                    <div className='flex-1 min-h-0'>
+                      <CardComments cardId={selectedCard._id} />
+                    </div>
+                  </div>
+
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
       <ToastContainer closeOnClick position="bottom-right" autoClose={3000} />
