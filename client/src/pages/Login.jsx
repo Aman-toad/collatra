@@ -14,7 +14,7 @@ import { ToastContainer, toast } from 'react-toastify';
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const { setUser } = useContext(AuthContext)
+  const { login } = useContext(AuthContext)
   const navigate = useNavigate();
 
   const handleChange = (e) =>
@@ -28,10 +28,8 @@ const Login = () => {
     }
     try {
       const { data } = await api.post("/auth/login", formData);
-      setUser(data);
-      toast.success('Login Successfull')
-      localStorage.setItem("user", JSON.stringify(data.user))
-      localStorage.setItem("token", data.token)
+      login(data);
+      toast.success('Login Successfull');
       navigate("/workspaces");
     } catch (err) {
       console.error('something went wrong',err);
@@ -60,7 +58,7 @@ const Login = () => {
             transition={{ duration: 0.5 }}
           >
             <div className="flex items-center gap-3 mb-8">
-              <img src={logo} alt="CollabSutra" className="w-12 h-12" />
+              {/* <img src={logo} alt="CollabSutra" className="w-12 h-12" /> */}
               <h2 className="text-3xl font-bold text-foreground">CollabSutra</h2>
             </div>
 

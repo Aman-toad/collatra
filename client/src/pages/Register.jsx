@@ -19,7 +19,7 @@ const Register = () => {
     password: '',
     confirmPassword: '',
   });
-  const { setUser } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleChange = (e) =>
@@ -27,6 +27,13 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailRegex.test(formData.email)){
+      toast.error("Please enter a valid email format");
+      return;
+    }
+    
     if (!formData.name || !formData.email || !formData.password) {
       toast.error('Please fill out all the fields.');
       return;
@@ -38,7 +45,7 @@ const Register = () => {
     }
     try {
       const { data } = await api.post('/auth/register', formData);
-      setUser(data);
+      login(data);
       navigate('/workspaces');
       toast.success('Registration Successfull')
     } catch (err) {

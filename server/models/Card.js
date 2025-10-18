@@ -15,11 +15,13 @@ const cardSchema = new mongoose.Schema(
       enum: ['todo', 'doing', 'done'],
       default: 'todo'
     },
-    assignedTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
-    },
+    assignedTo: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ]
+    ,
     workspace: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Workspace",

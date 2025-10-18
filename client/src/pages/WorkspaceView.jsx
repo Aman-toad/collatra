@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, Users, Menu } from 'lucide-react';
+import { ArrowLeft, Plus, Users, Menu, UserPlus } from 'lucide-react';
 import api from '../utils/api';
 import CardItem from '../components/CardItem';
 import { Sidebar } from '../components/Sidebar';
@@ -18,6 +18,8 @@ export default function WorkspaceView() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [showAddCard, setShowAddCard] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [memberEmail, setMemberEmail] = useState('');
 
   useEffect(() => {
     fetchWorkspace();
@@ -36,8 +38,9 @@ export default function WorkspaceView() {
 
   const fetchCards = async () => {
     try {
-      const { data } = await api.get(`/cards/workspace/${id}`);
+      const { data } = await api.get(`/cards/workspaces/${id}`);
       setCards(data);
+
     } catch (err) {
       console.error(err);
     }
@@ -46,9 +49,9 @@ export default function WorkspaceView() {
   const createCard = async () => {
     if (!title.trim()) return;
     try {
-      await api.post('/cards', { title, description, workspace: id , status:"todo"});
+      await api.post('/cards', { title, description, workspace: id, status: "todo" });
 
-      toast.success("Card Created SUccessfully !");
+      toast.success("Card Created Successfully !");
       setTitle('');
       setDescription('');
       setShowAddCard(false);
@@ -82,6 +85,40 @@ export default function WorkspaceView() {
       await api.put(`/cards/${cardId}`, { assignedTo: [userId] });
       fetchCards();
     } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addMember = async () => {
+    if (!memberEmail.trim()) {
+      toast.error('Please enter a valid email.');
+      return;
+    }
+
+    //basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(memberEmail)) {
+      toast.error('Please enter a valid email format.')
+      return;
+    }
+
+    try {
+      const { data } = await api.put(`/workspaces/${id}/members`, {
+        email: memberEmail
+      });
+
+      toast.success(data.message);
+
+      setWorkspace(prev => ({
+        ...prev,
+        members: [...(prev.members || []), data.member]
+      }));
+
+      setMemberEmail('');
+      setShowAddCard(false);
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || "Failed to add member.";
+      toast.error(errorMessage);
       console.error(err);
     }
   };
@@ -137,8 +174,14 @@ export default function WorkspaceView() {
                     className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full"
                   >
                     <Users className="w-5 h-5 text-primary" />
-                    <span className="font-semibold text-primary">{workspace.members.length} Members</span>
+                    <span className="font-semibold text-primary">{workspace?.members?.length} Members</span>
                   </motion.div>
+                  <motion.button>
+                    <Button onClick={() => setShowAddMember(true)} className="flex items-center gap-2">
+                      <UserPlus className="w-5 h-5" />
+                      Add Member
+                    </Button>
+                  </motion.button>
                 </div>
 
                 {/* Members List */}
@@ -219,6 +262,49 @@ export default function WorkspaceView() {
                     </Button>
                   </div>
                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* add member modal */}
+          <AnimatePresence>
+            {showAddMember && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowAddMember(false)}
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
+              >
+                <motion.div
+                  initial={{ scale: 0.9, y: 50 }}
+                  animate={{ scale: 1, y: 0 }}
+                  exit={{ scale: 0.9, y: 50 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-card p-8 rounded-3xl shadow-2xl w-full max-w-md border border-border"
+                >
+                  <h3 className="text-2xl font-bold mb-6 text-foreground">Add Member</h3>
+
+                  <Input
+                    type="email"
+                    value={memberEmail}
+                    onChange={(e) => setMemberEmail(e.target.value)}
+                    placeholder="Enter member's email"
+                    className="w-full mb-4"
+                  />
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => setShowAddMember(false)}
+                      className="flex-1 bg-muted text-foreground hover:bg-muted/80"
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={addMember} className="flex-1">
+                      Add User
+                    </Button>
+                  </div>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>

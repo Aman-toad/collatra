@@ -5,7 +5,44 @@ import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ✅ Create Card
+//Get all cards for a workspace (new)
+router.get("/workspaces/:workspaceId", authMiddleware, async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+
+    // Check if workspace exists
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    //  Access Control: Check if user is owner OR a member
+    const userId = req.user._id.toString();
+    const isOwner = workspace.owner.toString() === userId;
+    const isMember = workspace.members.some(member => member.toString() === userId);
+
+    if (!isMember && !isOwner) {
+      return res.status(403).json({ message: "Access denied: Not a member of the workspace" });
+    }
+
+    // Fetch Cards and Populate
+    const cards = await Card.find({ workspace: workspaceId })
+      .populate({
+        path: 'assignedTo',
+        select: 'name email',
+      })
+      .exec(); 
+
+    // Success Response
+    res.status(200).json(cards);
+    
+  } catch (err) {
+    console.error("Error fetching cards for workspace:", err);
+    res.status(500).json({ message: "Failed to fetch cards" });
+  }
+});
+
+//  Create Card
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const { title, description, status, assignedTo, workspace } = req.body;
@@ -26,7 +63,7 @@ router.post("/", authMiddleware, async (req, res) => {
       title,
       description,
       status: status || "todo",
-      assignedTo,
+      assignedTo: assignedTo ? (Array.isArray(assignedTo) ? assignedTo : [assignedTo]) : [],
       workspace,
       owner: req.user.id,
     });
@@ -58,7 +95,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
     if (title !== undefined) card.title = title;
     if (description !== undefined) card.description = description;
     if (status !== undefined) card.status = status;
-    if (assignedTo !== undefined) card.assignedTo = assignedTo;
+    if (assignedTo !== undefined) card.assignedTo = assignedTo ? (Array.isArray(assignedTo) ? assignedTo : [assignedTo]) : [];
 
     await card.save();
     res.status(200).json(card);
