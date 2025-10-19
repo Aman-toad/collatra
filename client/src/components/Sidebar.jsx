@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, FolderKanban, Users, Settings, LogOut, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { Home, FolderKanban, Users, Settings, LogOut, ChevronLeft, ChevronRight, User, NotepadText } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useContext } from 'react';
 import logo from '../assets/logo.png';
@@ -14,6 +14,7 @@ export function Sidebar({ isOpen, onToggle }) {
     { icon: FolderKanban, label: 'Workspaces', path: '/workspaces' },
     { icon: Users, label: 'Team', path: '/team' },
     { icon: Settings, label: 'Settings', path: '/settings' },
+    { icon: NotepadText, label: 'Docs', path: '/docs' },
   ];
 
   const isActive = (path) => location.pathname === path;

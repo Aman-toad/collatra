@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes.js'
 import workspaceRoutes from './routes/workspaceRoutes.js';
 import cardRoutes from './routes/cardRoutes.js';
 import commentRoutes from './routes/commentRoutes.js'
+import docRoutes from './routes/docRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -42,13 +43,13 @@ const io = new Server(httpServer, {
 
 app.use(cors());
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: false }));
 //mounting routes with /api
 app.use("/api/auth", authRoutes);
 app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/cards", cardRoutes);
 app.use("/api/cards", commentRoutes);
-
+app.use("/api/docs", docRoutes);
 
 app.get("/", (req, res) => res.send("CollabBoard API Running"));
 
