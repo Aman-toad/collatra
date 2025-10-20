@@ -43,6 +43,21 @@ export default function Docs() {
     }
   };
 
+  //delete docs
+  const handleDeleteDoc = async (docId, title) => {
+    if (!window.confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/docs/${docId}`)
+
+      setDocs(prevDocs => prevDocs.filter(doc => doc._id !== docId));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete document. Check console for details.');
+    }
+  }
+
   if (loading) return <div>Loading documents...</div>;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
@@ -66,6 +81,7 @@ export default function Docs() {
                 key={doc._id}
                 doc={doc}
                 onClick={() => navigate(`/docs/${doc._id}`)}
+                onDelete={handleDeleteDoc}
               />
             ))
           ) : (

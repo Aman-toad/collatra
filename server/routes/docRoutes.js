@@ -2,6 +2,7 @@ import express from 'express';
 import Doc from '../models/Doc.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import { docAccess } from '../middleware/docAccessMiddleware.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -91,6 +92,49 @@ router.delete("/:id", authMiddleware, docAccess, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server Error: Could not delete document' });
+  }
+})
+
+//add users
+router.put('/:id/share', authMiddleware, docAccess, async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email address is required.' });
+  }
+
+  if (!req.doc.createdBy.equals(req.user._id)) {
+    return res.status(403).json({ message: 'Only the document creator can share this document.' });
+  };
+
+  try {
+    const userToAdd = await User.findOne({ email });
+
+    if (!userToAdd) {
+      return res.status(404).json({ message: 'User with that email not found.' });
+    }
+
+    const doc = req.doc;
+    const userIdToAdd = userToAdd._id;
+
+    // if already member
+    const isAlreadyMember = doc.members.some(memberId => memberId.equals(userToAdd));
+
+    if (isAlreadyMember) {
+      return res.status(409).json({ message: 'User is already a member of this document.' });
+    }
+
+    doc.members.push(userIdToAdd);
+
+    await doc.save();
+
+    res.status(200).json({
+      message: `${userToAdd.name} (${userToAdd.email}) added successfully.`,
+      members: doc.members // Optionally return the updated list
+    });
+  } catch (err) {
+    console.error('Error sharing document:', err);
+    res.status(500).json({ message: 'Server error during sharing process.' });
   }
 })
 
