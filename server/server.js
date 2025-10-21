@@ -10,6 +10,7 @@ import cardRoutes from './routes/cardRoutes.js';
 import commentRoutes from './routes/commentRoutes.js'
 import docRoutes from './routes/docRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import eventRoutes from './routes/eventRoutes.js'
 
 dotenv.config();
 connectDB();
@@ -52,6 +53,7 @@ app.use("/api/cards", cardRoutes);
 app.use("/api/cards", commentRoutes);
 app.use("/api/docs", docRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/events", eventRoutes);
 
 app.get("/", (req, res) => res.send("CollabBoard API Running"));
 

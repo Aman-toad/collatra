@@ -61,7 +61,7 @@ export default function Workspaces() {
       >
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-primary text-primary-foreground rounded-lg shadow-lg"
+          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-primary text-primary-foreground rounded-xl shadow-lg"
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -77,7 +77,7 @@ export default function Workspaces() {
                 <motion.h1
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="text-4xl md:text-5xl font-bold text-foreground mb-2"
+                  className="text-4xl md:text-5xl font-bold text-gradient mb-2"
                 >
                   Your Workspaces
                 </motion.h1>
@@ -118,7 +118,7 @@ export default function Workspaces() {
                   transition={{ delay: workspaces.length * 0.1 }}
                   whileHover={{ y: -8, scale: 1.02 }}
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-muted border-2 border-dashed border-border rounded-3xl p-6 h-full flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-all min-h-[250px]"
+                  className="bg-muted/30 border-2 border-dashed border-border rounded-3xl p-6 h-full flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-all min-h-[250px]"
                 >
                   <motion.div
                     whileHover={{ scale: 1.1, rotate: 90 }}
@@ -143,17 +143,17 @@ export default function Workspaces() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowCreateModal(false)}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-card rounded-3xl p-8 max-w-md w-full shadow-2xl border-2 border-border"
+              className="bg-card/90 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full shadow-2xl border-2 border-border"
             >
               <h2 className="text-2xl font-bold text-foreground mb-6">Create New Workspace</h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
@@ -175,7 +175,7 @@ export default function Workspaces() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="What's this workspace about?"
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-all resize-none"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-all resize-none"
                     rows={3}
                   />
                 </div>
@@ -184,11 +184,12 @@ export default function Workspaces() {
               <div className="flex gap-3 mt-6">
                 <Button
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 bg-muted text-foreground hover:bg-muted/80"
+                  variant="outline"
+                  className="flex-1"
                 >
                   Cancel
                 </Button>
-                <Button onClick={createWorkspace} className="flex-1">
+                <Button variant="secondary" onClick={createWorkspace} className="flex-1">
                   Create
                 </Button>
               </div>

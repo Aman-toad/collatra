@@ -8,6 +8,7 @@ import WorkspaceView from "./pages/WorkspaceView";
 import PrivateRoute from "./routes/PrivateRoute";
 import Docs from "./pages/Docs";
 import DocEditor from './pages/DocEditor'
+import CalendarPage from "./pages/Calendar";
 
 export default function App() {
   return (
@@ -34,6 +35,12 @@ export default function App() {
       />
       <Route path="/docs/:id" element={<DocEditor />} />
 
+
+      <Route path="/calendar" element={
+        <PrivateRoute>
+          <CalendarPage />
+        </PrivateRoute>
+      } />
 
       {/* for fallback */}
       <Route path="*" element={<NotFound />} />

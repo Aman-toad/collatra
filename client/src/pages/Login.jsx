@@ -1,15 +1,14 @@
 import { motion } from 'framer-motion';
 import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Sparkles } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { ThemeToggle } from '../components/ThemeToggle';
-import loginIllustration from '../assets/login-illustration.jpg';
-import logo from '../assets/logo.png';
 import api from '../utils/api.js';
 import { AuthContext } from "../context/AuthContext";
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -29,20 +28,22 @@ const Login = () => {
     try {
       const { data } = await api.post("/auth/login", formData);
       login(data);
-      toast.success('Login Successfull');
+      toast.success('Login Successful');
       navigate("/workspaces");
     } catch (err) {
       console.error('something went wrong',err);
-      
       toast.error('Login Failed')
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex relative overflow-hidden">
+      {/* Animated background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 animate-glow-pulse" />
+      
       {/* Left Side - Form */}
       <motion.div
-        className="flex-1 flex items-center justify-center p-8"
+        className="flex-1 flex items-center justify-center p-8 relative z-10"
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
@@ -56,15 +57,21 @@ const Login = () => {
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5 }}
+            className="bg-card/50 backdrop-blur-xl border-2 border-border rounded-3xl p-8 shadow-2xl"
           >
             <div className="flex items-center gap-3 mb-8">
-              {/* <img src={logo} alt="CollabSutra" className="w-12 h-12" /> */}
-              <h2 className="text-3xl font-bold text-foreground">CollabSutra</h2>
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Sparkles className="w-10 h-10 text-primary" />
+              </motion.div>
+              <h2 className="text-3xl font-bold text-gradient">Collatra</h2>
             </div>
 
             <h1 className="text-4xl font-bold mb-2 text-foreground">Welcome back!</h1>
             <p className="text-muted-foreground mb-8">
-              Simplify your workflow and boost your productivity with CollabSutra. Get started for free.
+              Simplify your workflow and boost productivity
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -87,7 +94,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -99,7 +106,7 @@ const Login = () => {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full bg-green-600 text-white" size="lg">
+              <Button type="submit" variant="secondary" className="w-full" size="lg">
                 Login
               </Button>
             </form>
@@ -111,23 +118,23 @@ const Login = () => {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="w-12 h-12 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:opacity-90 transition-opacity border-2"
+                  className="w-12 h-12 rounded-full bg-muted border-2 border-border flex items-center justify-center hover:border-primary transition-colors"
                 >
-                  <span className="font-bold">G</span>
+                  <span className="font-bold text-foreground">G</span>
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="w-12 h-12 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:opacity-90 transition-opacity border-2"
+                  className="w-12 h-12 rounded-full bg-muted border-2 border-border flex items-center justify-center hover:border-primary transition-colors"
                 >
-                  <span className="font-bold">f</span>
+                  <span className="font-bold text-foreground">f</span>
                 </motion.button>
               </div>
             </div>
 
             <p className="mt-8 text-center text-sm text-muted-foreground">
               Not a member?{' '}
-              <Link to="/register" className="text-primary hover:text-primary-dark font-semibold transition-colors">
+              <Link to="/register" className="text-primary hover:text-primary/80 font-semibold transition-colors">
                 Register now
               </Link>
             </p>
@@ -135,30 +142,29 @@ const Login = () => {
         </div>
       </motion.div>
 
-      {/* Right Side - Illustration */}
+      {/* Right Side - Visual */}
       <motion.div
-        className="hidden lg:flex flex-1 bg-muted items-center justify-center p-8"
+        className="hidden lg:flex flex-1 items-center justify-center p-12 relative z-10"
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <motion.div
-          animate={{
-            y: [0, -10, 0],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
+          animate={{ y: [0, -20, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="text-center"
         >
-          <img
-            src={loginIllustration}
-            alt="Collaboration"
-            className="max-w-lg w-full"
-          />
-          <p className="text-center mt-8 text-xl font-semibold text-foreground">
-            Make your work easier and organized<br />with <span className="text-primary">CollabSutra</span>
+          <motion.div 
+            className="text-8xl font-bold text-gradient mb-6"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, type: "spring" }}
+          >
+            Collatra
+          </motion.div>
+          <p className="text-2xl font-semibold text-foreground max-w-md">
+            Make your work easier and organized<br />
+            <span className="text-primary">Collaborate. Create. Succeed.</span>
           </p>
         </motion.div>
       </motion.div>
