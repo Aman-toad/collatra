@@ -7,6 +7,7 @@ import { X } from 'lucide-react';
 import api from '../utils/api.js';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { Sidebar } from '../components/Sidebar.jsx';
 
 const localizer = momentLocalizer(moment);
 
@@ -15,6 +16,7 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', allDay: false, color: 'bg-primary' });
   const [currentRange, setCurrentRange] = useState(null);
 
@@ -116,138 +118,141 @@ export default function CalendarPage() {
   if (error) return <div className="p-8 text-destructive font-bold text-center">{error}</div>;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="p-8 bg-background min-h-screen"
-    >
-      <motion.div
-        initial={{ y: -20 }}
-        animate={{ y: 0 }}
-        className="mb-8"
+    <div className="min-h-screen bg-background">
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      <main>
+        <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="p-8 bg-background min-h-screen"
       >
-        <h1 className="text-4xl font-bold text-gradient mb-2">My Personal Calendar</h1>
-        <p className="text-muted-foreground">Click and drag on the calendar to create a new event. Click an existing event to delete it.</p>
-      </motion.div>
+        <motion.div
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold text-gradient mb-2">My Personal Calendar</h1>
+          <p className="text-muted-foreground">Click and drag on the calendar to create a new event. Click an existing event to delete it.</p>
+        </motion.div>
 
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="bg-card border-2 border-border p-6 rounded-3xl shadow-2xl h-[80vh]"
-      >
-        <Calendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          defaultView="month"
-          selectable
-          onSelectSlot={handleSelectSlot}
-          onSelectEvent={handleSelectEvent}
-          components={{
-            event: EventComponent,
-          }}
-          className="text-foreground calendar-custom"
-          style={{ height: '100%' }}
-        />
-      </motion.div>
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="bg-card border-2 border-border p-6 rounded-3xl shadow-2xl h-[80vh]"
+        >
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            defaultView="month"
+            selectable
+            onSelectSlot={handleSelectSlot}
+            onSelectEvent={handleSelectEvent}
+            components={{
+              event: EventComponent,
+            }}
+            className="text-foreground calendar-custom"
+            style={{ height: '100%' }}
+          />
+        </motion.div>
 
-      <AnimatePresence>
-        {showModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setShowModal(false)}
-          >
+        <AnimatePresence>
+          {showModal && (
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-card border-2 border-border p-8 rounded-3xl shadow-2xl w-full max-w-lg"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+              onClick={() => setShowModal(false)}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-foreground">Add New Event</h2>
-                <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <form onSubmit={handleCreateEvent}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-foreground mb-2">Event Title</label>
-                  <Input
-                    type="text"
-                    value={newEvent.title}
-                    onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                    placeholder="Enter event title"
-                    required
-                  />
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-card border-2 border-border p-8 rounded-3xl shadow-2xl w-full max-w-lg"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-foreground">Add New Event</h2>
+                  <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground">
+                    <X className="w-6 h-6" />
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Start Time</label>
+                <form onSubmit={handleCreateEvent}>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-foreground mb-2">Event Title</label>
                     <Input
-                      type={newEvent.allDay ? "date" : "datetime-local"}
-                      value={newEvent.start}
-                      onChange={(e) => setNewEvent({ ...newEvent, start: e.target.value })}
+                      type="text"
+                      value={newEvent.title}
+                      onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                      placeholder="Enter event title"
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">End Time</label>
-                    <Input
-                      type={newEvent.allDay ? "date" : "datetime-local"}
-                      value={newEvent.end}
-                      onChange={(e) => setNewEvent({ ...newEvent, end: e.target.value })}
-                      required
-                    />
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Start Time</label>
+                      <Input
+                        type={newEvent.allDay ? "date" : "datetime-local"}
+                        value={newEvent.start}
+                        onChange={(e) => setNewEvent({ ...newEvent, start: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">End Time</label>
+                      <Input
+                        type={newEvent.allDay ? "date" : "datetime-local"}
+                        value={newEvent.end}
+                        onChange={(e) => setNewEvent({ ...newEvent, end: e.target.value })}
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-foreground mb-2">Color</label>
-                  <select
-                    value={newEvent.color}
-                    onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
-                    className="w-full px-4 py-2 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-all"
-                  >
-                    <option value="bg-primary">Purple</option>
-                    <option value="bg-secondary">Green</option>
-                    <option value="bg-accent">Cyan</option>
-                    <option value="bg-destructive">Red</option>
-                    <option value="bg-yellow-500">Yellow</option>
-                  </select>
-                </div>
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-foreground mb-2">Color</label>
+                    <select
+                      value={newEvent.color}
+                      onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
+                      className="w-full px-4 py-2 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-all"
+                    >
+                      <option value="bg-primary">Purple</option>
+                      <option value="bg-secondary">Green</option>
+                      <option value="bg-accent">Cyan</option>
+                      <option value="bg-destructive">Red</option>
+                      <option value="bg-yellow-500">Yellow</option>
+                    </select>
+                  </div>
 
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowModal(false)}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="secondary"
-                    className="flex-1"
-                  >
-                    Create Event
-                  </Button>
-                </div>
-              </form>
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowModal(false)}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="secondary"
+                      className="flex-1"
+                    >
+                      Create Event
+                    </Button>
+                  </div>
+                </form>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
 
-      <style jsx global>{`
+        <style jsx global>{`
         .calendar-custom .rbc-toolbar {
           padding: 1rem;
           margin-bottom: 1rem;
@@ -280,6 +285,8 @@ export default function CalendarPage() {
           background: hsl(var(--muted) / 0.3);
         }
       `}</style>
-    </motion.div>
+      </motion.div>
+      </main>
+    </div>
   );
 }

@@ -5,7 +5,7 @@ import { Button } from '../components/Button.jsx';
 import { ThemeToggle } from '../components/ThemeToggle';
 import heroImage from '../assets/meditation.png';
 import logo from '../assets/logo.png';
-import heroBg from '../assets/hero.jpg'
+import heroBg from '../assets/hero.jpg';
 
 const Home = () => {
   const features = [
@@ -38,7 +38,7 @@ const Home = () => {
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="CollabSutra" className="w-10 h-10" />
-            <span className="text-2xl font-bold text-foreground">CollabSutra</span>
+            <span className="text-2xl font-bold text-foreground">Collatra</span>
           </Link>
 
           <div className="flex items-center gap-4">
@@ -59,7 +59,7 @@ const Home = () => {
           <img
             src={heroBg}
             alt="Bg"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover "
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/70 to-background" />
         </div>
